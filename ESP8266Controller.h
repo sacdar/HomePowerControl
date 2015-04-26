@@ -18,6 +18,7 @@ public:
     void loop();
     void serve_homepage(int ch_id);
     void setupWiFi();
+    void show_ip();
 };
 
 #endif //_ESP8266CONTROLLER_H_

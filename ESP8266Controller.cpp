@@ -38,6 +38,13 @@ byte ESP8266Controller::wait_for_esp_response(int timeout, char* term = TERM_OK)
     dbg.print(buffer);
     return found;
 }
+//Todo: modify to get_ip() to decouple with dbg.print()
+void ESP8266Controller::show_ip(){
+    // print device IP address
+    dbg.print("device ip addr:");
+    esp.println("AT+CIFSR");
+    wait_for_esp_response(1000);
+}
 
 void ESP8266Controller::setup()
 {
@@ -55,10 +62,7 @@ void ESP8266Controller::setup()
 
     setupWiFi();
 
-    // print device IP address
-    dbg.print("device ip addr:");
-    esp.println("AT+CIFSR");
-    wait_for_esp_response(1000);
+    show_ip();
 }
 
 bool ESP8266Controller::read_till_eol()
@@ -126,7 +130,6 @@ void ESP8266Controller::loop()
 
 void ESP8266Controller::serve_homepage(int ch_id)
 {
-    //String header = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\nConnection: close\r\nRefresh: 5\r\n";
     String header = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\nConnection: close\r\n";
     String content = "";
     // output the value of each analog input pin
