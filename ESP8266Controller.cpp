@@ -17,13 +17,13 @@ SoftwareSerial esp(10, 11); // RX, TX
 
 byte ESP8266Controller::wait_for_esp_response(int timeout, char* term = TERM_OK)
 {
-    unsigned long t = millis();
+    unsigned long due_time = millis()+timeout;
     bool found = false;
     int i = 0;
     int len = strlen(term);
     // wait for at most timeout milliseconds
     // or if OK\r\n is found
-    while (millis() < t + timeout) {
+    while (millis() < due_time ) {
         if (esp.available()) {
             buffer[i++] = esp.read();
             if (i >= len) {
