@@ -21,6 +21,7 @@ GPIOController *gpioController = new GPIOController(13, OUTPUT);
 
 void setup()
 {
+    
 #if WIFI
     wifiController->setup();
 #else
