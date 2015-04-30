@@ -52,33 +52,27 @@ void ESP8266Controller::loop()
     }
 }
 
-String ESP8266Controller::wait_for_esp_response(int timeout, String term = TERM_OK){
-    
-    unsigned long due_time = millis()+timeout;
-    
-    String rsp = "";
-    while(!rsp.endsWith(TERM_OK) && millis() < due_time ){
-        rsp = rsp + esp.readString();
-    }
-    dbg.println(rsp);
-    return rsp;
-}
 
 //Todo: modify to get_ip() to decouple with dbg.print()
 void ESP8266Controller::show_ip(){
     // print device IP address
     dbg.print("device ip addr:");
     esp.println("AT+CIFSR");
-    //wait_for_esp_response(1000);
     
-    esp.setTimeout(1000);
+    String rsp = wait_for_esp_response(1000,TERM_OK); 
+    dbg.println(rsp);
+}
+
+String ESP8266Controller::wait_for_esp_response(int timeout, String term = TERM_OK){
+    
+    unsigned long due_time = millis()+timeout;
     
     String rsp = "";
-    while(!rsp.endsWith(TERM_OK)){
+    while(!rsp.endsWith(term) && millis() < due_time ){
         rsp = rsp + esp.readString();
     }
-    
     dbg.println(rsp);
+    return rsp;
 }
 
 void ESP8266Controller::deal_with_input_http_request(String input)
