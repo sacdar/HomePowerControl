@@ -59,8 +59,7 @@ void ESP8266Controller::show_ip(){
     dbg.print("device ip addr:");
     esp.println("AT+CIFSR");
     
-    String rsp = wait_for_esp_response(1000,TERM_OK); 
-    dbg.println(rsp);
+    String rsp = wait_for_esp_response(1000,TERM_OK);
 }
 
 String ESP8266Controller::wait_for_esp_response(int timeout, String term = TERM_OK){
@@ -152,18 +151,19 @@ void ESP8266Controller::setupWiFi()
     esp.println("AT");
     wait_for_esp_response(1000);
 
+
     // set mode 1 (client)
     esp.println("AT+CWMODE=1");
     String rsp = wait_for_esp_response(1000);
     
-    //reset if set mode result is not "no change"
+    //reset if cw mode is change
     if(rsp.indexOf("no change")<0){
         // reset WiFi module
         esp.print("AT+RST\r\n");
         wait_for_esp_response(1500);
         delay(3000);
     }
-
+    
     // join AP
     esp.print("AT+CWJAP=\"");
     esp.print(SSID);
