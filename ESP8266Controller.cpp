@@ -15,77 +15,6 @@ SoftwareSerial esp(10, 11); // RX, TX
 
 #define LED1 13
 
-
-
-void ESP8266Controller::read_serial_until_new_line(char* rsp){
-    
-    bool is_end = false;
-    int index = 0;
-    while(true){
-       char x = esp.read();
-       delay(1);
-       if(x == '\n')
-           is_end = true;
-       rsp[index]=x;
-       index++;
-       if(is_end)
-           break;
-       if(index>40)
-           break;
-    }
-    rsp[index]='\0';
-    return;
-}
-
-void ESP8266Controller::copy_to_buffer(char* buffer, char* rsp){
-    int len = strlen(rsp);
-    int i;
-    int k=0;
-    for(i = strlen(buffer); i< strlen(buffer)+strlen(rsp);i++){
-        buffer[i] = rsp[k];
-        k++;
-    }
-}
-
-bool ESP8266Controller::is_equal(char* a, char* b){
-    return strncmp(a,b,strlen(b))==0;
-}
-
-bool ESP8266Controller::wait_for_esp_response(int timeout, char* term = TERM_OK){
-    unsigned long due_time = millis()+timeout;
-    bool found = false;
-    int i = 0;
-    int len = strlen(term);
-    //clear the buffer
-    buffer[0]='\0';
-    
-    // wait for at most timeout milliseconds
-    // or if OK\r\n is found
-    while (millis() < due_time ) {
-        if (esp.available()) {
-            char new_input[50];
-            read_serial_until_new_line(new_input);
-            if (is_equal(new_input,term)){
-                found = true;
-            }
-            copy_to_buffer(buffer,new_input);
-
-            if(found)
-                break;
-        }
-    }
-    dbg.println(buffer);
-    return found;
-}
-
-//Todo: modify to get_ip() to decouple with dbg.print()
-void ESP8266Controller::show_ip(){
-    // print device IP address
-    dbg.print("device ip addr:");
-    esp.println("AT+CIFSR");
-    wait_for_esp_response(1000);
-}
-
 void ESP8266Controller::setup()
 {
 
@@ -105,14 +34,79 @@ void ESP8266Controller::setup()
     show_ip();
 }
 
-void ESP8266Controller::deal_with_input_http_request(char *input)
+void ESP8266Controller::loop()
 {
-    input = input + 4;
-    if (strncmp(input, "/led1/on", 8) == 0) {
+    int ch_id, packet_len;
+    char *pb;
+
+    if (esp.available()){
+        
+        String rsp = esp.readString();
+        dbg.println("<<===esp===");
+        dbg.print(rsp);
+        dbg.println("======>>");
+        
+        if(rsp.indexOf("+IPD")>=0){
+            deal_with_input_http_request(rsp);
+        }
+    }
+}
+
+String ESP8266Controller::wait_for_esp_response(int timeout, String term = TERM_OK){
+    
+    unsigned long due_time = millis()+timeout;
+    
+    String rsp = "";
+    while(!rsp.endsWith(TERM_OK) && millis() < due_time ){
+        rsp = rsp + esp.readString();
+    }
+    dbg.println(rsp);
+    return rsp;
+}
+
+//Todo: modify to get_ip() to decouple with dbg.print()
+void ESP8266Controller::show_ip(){
+    // print device IP address
+    dbg.print("device ip addr:");
+    esp.println("AT+CIFSR");
+    //wait_for_esp_response(1000);
+    
+    esp.setTimeout(1000);
+    
+    String rsp = "";
+    while(!rsp.endsWith(TERM_OK)){
+        rsp = rsp + esp.readString();
+    }
+    
+    dbg.println(rsp);
+}
+
+void ESP8266Controller::deal_with_input_http_request(String input)
+{
+    if (input.indexOf("/led1/on") > 0) {
         turn_on_led1();
-    } else if (strncmp(input, "/led1/off", 9) == 0) {
+    } else if (input.indexOf("/led1/off") > 0) {
         turn_off_led1();
     }
+    
+    int channel = get_channel(input);
+    serve_homepage(channel);
+}
+
+
+int ESP8266Controller::get_channel(String input){
+
+    //It should looks like this:
+    //+IPD,1,432:GET /led1/on HTTP/1.1
+    String x = input.substring(input.indexOf("+IPD,")+5,input.indexOf("GET"));
+    // now x should be "1,432:"
+    x = x.substring(0,x.indexOf(","));
+    // now x should be "1"
+    
+    int channel=x.toInt();
+    dbg.print("channel is ");
+    dbg.println(channel);
+    return channel;
 }
 
 void ESP8266Controller::turn_on_led1()
@@ -125,35 +119,6 @@ void ESP8266Controller::turn_off_led1()
 {
     dbg.print("la la la ~ turn off led 1 !\n");
     digitalWrite(LED1, LOW);
-}
-
-void ESP8266Controller::loop()
-{
-    int ch_id, packet_len;
-    char *pb;
-
-    if (esp.available()){
-        read_serial_until_new_line(buffer);
-        dbg.print(buffer);
-        
-        if (strncmp(buffer, "+IPD,", 5) == 0) {
-            // request: +IPD,ch,len:data
-            sscanf(buffer + 5, "%d,%d", &ch_id, &packet_len);
-            if (packet_len > 0) {
-                // read serial until packet_len character received
-                // start from :
-                pb = buffer + 5;
-                while (*pb != ':') pb++;
-                pb++;
-                if (strncmp(pb, "GET /", 5) == 0) {
-                    deal_with_input_http_request(pb);
-                    wait_for_esp_response(1000);
-                    dbg.println("-> serve homepage");
-                    serve_homepage(ch_id);
-                }
-            }
-        }
-    }
 }
 
 void ESP8266Controller::serve_homepage(int ch_id)
@@ -177,7 +142,7 @@ void ESP8266Controller::serve_homepage(int ch_id)
     esp.print(ch_id);
     esp.print(",");
     esp.println(header.length() + content.length());
-    if (wait_for_esp_response(2000, "> ")) {
+    if (wait_for_esp_response(2000, "> ").endsWith("> ")) {
         esp.print(header);
         esp.print(content);
     } else {
@@ -195,12 +160,15 @@ void ESP8266Controller::setupWiFi()
 
     // set mode 1 (client)
     esp.println("AT+CWMODE=1");
-    wait_for_esp_response(1000);
-
-    // reset WiFi module
-    esp.print("AT+RST\r\n");
-    wait_for_esp_response(1500);
-    delay(3000);
+    String rsp = wait_for_esp_response(1000);
+    
+    //reset if set mode result is not "no change"
+    if(rsp.indexOf("no change")<0){
+        // reset WiFi module
+        esp.print("AT+RST\r\n");
+        wait_for_esp_response(1500);
+        delay(3000);
+    }
 
     // join AP
     esp.print("AT+CWJAP=\"");

@@ -9,9 +9,9 @@ typedef uint8_t byte;
 class ESP8266Controller : public WiFiController
 {
 public:
-    bool wait_for_esp_response(int timeout, char *term);
+    String wait_for_esp_response(int timeout, String term);
     void setup();
-    void deal_with_input_http_request(char *input);
+    void deal_with_input_http_request(String input);
     void turn_on_led1();
     void turn_off_led1();
     void loop();
@@ -19,9 +19,7 @@ public:
     void setupWiFi();
     void show_ip();
 private:
-    void read_serial_until_new_line(char* rsp);
-    void copy_to_buffer(char* buffer, char* rsp);
-    bool is_equal(char* a, char* b);
+    int get_channel(String input);
 };
 
 #endif //_ESP8266CONTROLLER_H_
