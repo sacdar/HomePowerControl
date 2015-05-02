@@ -15,7 +15,7 @@ public:
     void turn_on_led1();
     void turn_off_led1();
     void loop();
-    void serve_homepage(int ch_id);
+    void serve_homepage(int ch_id, String input_content);
     void setupWiFi();
     void show_ip();
 private:

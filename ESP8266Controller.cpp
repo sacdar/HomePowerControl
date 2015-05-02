@@ -1,7 +1,7 @@
 #define BUFFER_SIZE 512
 
 #define SSID  "HomePowerControl"      // change this to match your WiFi SSID
-#define PASS  "00000000"  // change this to match your WiFi password
+#define PASS  "00000000"  // change this to match your WiFi password 
 #define PORT  "80"           // using port 8080 by default
 #define TERM_OK "OK\r\n"
 
@@ -76,6 +76,7 @@ String ESP8266Controller::wait_for_esp_response(int timeout, String term = TERM_
 
 void ESP8266Controller::deal_with_input_http_request(String input)
 {
+    String rsp = "";
     if (input.indexOf("/led1/on") > 0) {
         turn_on_led1();
     } else if (input.indexOf("/led1/off") > 0) {
@@ -85,11 +86,11 @@ void ESP8266Controller::deal_with_input_http_request(String input)
         String at_command = input.substring(input.indexOf("/atcommand/cmd=")+strlen("/atcommand/cmd="),input.indexOf("/r/n"));
         dbg.println(at_command);
         esp.println(at_command);
-        String rsp = wait_for_esp_response(1000);
+        rsp = wait_for_esp_response(1000);
     }
     
     int channel = get_channel(input);
-    serve_homepage(channel);
+    serve_homepage(channel,rsp);
 }
 
 
@@ -120,18 +121,23 @@ void ESP8266Controller::turn_off_led1()
     digitalWrite(LED1, LOW);
 }
 
-void ESP8266Controller::serve_homepage(int ch_id)
+void ESP8266Controller::serve_homepage(int ch_id, String input_content)
 {
     String header = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\nConnection: close\r\n";
     String content = "";
-    // output the value of each analog input pin
-    for (int analogChannel = 0; analogChannel < 6; analogChannel++) {
-        int sensorReading = analogRead(analogChannel);
-        content += "analog input ";
-        content += analogChannel;
-        content += " is ";
-        content += sensorReading;
-        content += "<br />\n";
+    
+    if(input_content.length()>0){
+        content=input_content;
+    }else{
+        // output the value of each analog input pin
+        for (int analogChannel = 0; analogChannel < 6; analogChannel++) {
+            int sensorReading = analogRead(analogChannel);
+            content += "analog input ";
+            content += analogChannel;
+            content += " is ";
+            content += sensorReading;
+            content += "<br />\n";
+        }
     }
 
     header += "Content-Length:";
