@@ -80,6 +80,12 @@ void ESP8266Controller::deal_with_input_http_request(String input)
         turn_on_led1();
     } else if (input.indexOf("/led1/off") > 0) {
         turn_off_led1();
+    } else if (input.indexOf("/atcommand/cmd=")>0){
+        //ex: curl http://192.168.0.18/atcommand/cmd=AT+CIFSR/r/n 
+        String at_command = input.substring(input.indexOf("/atcommand/cmd=")+strlen("/atcommand/cmd="),input.indexOf("/r/n"));
+        dbg.println(at_command);
+        esp.println(at_command);
+        String rsp = wait_for_esp_response(1000);
     }
     
     int channel = get_channel(input);
