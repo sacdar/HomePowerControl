@@ -153,7 +153,7 @@ void ESP8266Controller::setupWiFi()
 
 
     // set mode 1 (client)
-    esp.println("AT+CWMODE=1");
+    esp.println("AT+CWMODE=3");
     String rsp = wait_for_esp_response(1000);
     
     //reset if cw mode is change
@@ -163,6 +163,9 @@ void ESP8266Controller::setupWiFi()
         wait_for_esp_response(1500);
         delay(3000);
     }
+    
+    esp.println("AT+CWSAP=\"AAA\",\"00000000\",5,0");
+    wait_for_esp_response(1000);
     
     // join AP
     esp.print("AT+CWJAP=\"");
