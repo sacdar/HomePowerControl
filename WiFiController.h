@@ -1,6 +1,11 @@
 #ifndef _WIFICONTROLLER_H_
 #define _WIFICONTROLLER_H_
 
+struct WiFiSettings {
+    char ssid[32];
+    char password[64];
+} wifiSettings;
+
 // AbstractProductA
 class WiFiController
 {

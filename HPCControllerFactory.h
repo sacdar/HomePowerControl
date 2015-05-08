@@ -9,6 +9,7 @@ class HPCControllerFactory : public ControllerFactory
 public:
     WiFiController* createWiFiController();
     BluetoothController* createBTController(int rx, int tx);
+    EEPROMController* createEEPROMController();
 };
 
 #endif //_HPCCONTROLLERFACTORY_H_
