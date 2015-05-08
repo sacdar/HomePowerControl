@@ -53,6 +53,13 @@ void ESP8266Controller::loop()
             deal_with_input_http_request(rsp);
         }
     }
+    
+    if(dbg.available()){
+        String command = dbg.readString();
+        dbg.println(command);
+        command = command;
+        esp.print(command);
+    }
 
 }
 
