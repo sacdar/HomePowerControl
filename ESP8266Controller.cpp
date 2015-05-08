@@ -1,7 +1,7 @@
 #define BUFFER_SIZE 512
 
 #define SSID  "HomePowerControl"      // change this to match your WiFi SSID
-#define PASS  "00000000"  // change this to match your WiFi password 
+#define PASS  "00000000"    // change this to match your WiFi password 
 #define PORT  "80"           // using port 8080 by default
 #define TERM_OK "OK\r\n"
 
@@ -14,11 +14,13 @@ char buffer[BUFFER_SIZE];
 SoftwareSerial esp(10, 11); // RX, TX
 
 #define LED1 13
+#define STA_CONNECTED_LED 4
 
 void ESP8266Controller::setup()
 {
 
     pinMode(LED1, OUTPUT);
+    pinMode(STA_CONNECTED_LED, OUTPUT);
 
     // assume esp8266 operates at 115200 baud rate
     // change if necessary to match your modules' baud rate
@@ -32,6 +34,7 @@ void ESP8266Controller::setup()
     setupWiFi();
 
     show_ip();
+    digitalWrite(STA_CONNECTED_LED, HIGH);
 }
 
 void ESP8266Controller::loop()
@@ -50,6 +53,7 @@ void ESP8266Controller::loop()
             deal_with_input_http_request(rsp);
         }
     }
+
 }
 
 
