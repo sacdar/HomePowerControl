@@ -99,6 +99,7 @@ void ESP8266Controller::deal_with_input_http_request(String input)
         esp.println(at_command);
         rsp = wait_for_esp_response(1000);
     } else if (input.indexOf("/wifi_ssid_id/")){
+        //ex: curl http://192.168.43.83/wifi_ssid_id/ssid=abcd,password=87654321
         String ssid = input.substring(input.indexOf("/wifi_ssid_id/ssid=")+strlen("/wifi_ssid_id/ssid="),input.indexOf(",password="));
         String password = input.substring(input.indexOf(",password=")+strlen(",password="), input.indexOf(" HTTP/1.1"));
         rsp = "ssid:"+ssid+", password="+password;
