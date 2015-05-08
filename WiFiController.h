@@ -4,12 +4,13 @@
 struct WiFiSettings {
     char ssid[32];
     char password[64];
-} wifiSettings;
+};
 
 // AbstractProductA
 class WiFiController
 {
 public:
+    WiFiSettings wifiSettings;
     virtual void loop() = 0;
     virtual void setup() = 0;
 };

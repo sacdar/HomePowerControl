@@ -2,11 +2,8 @@
 
 #include "SoftwareSerial.h"
 #include "HPCControllerFactory.h"
-#include "EEPROMController.h"
 #if WIFI
-#include "WiFiController.h"
 #else
-#include "BluetoothController.h"
 #include "GPIOController.h"
 #include "CommandOperation.h"
 #endif
@@ -22,15 +19,15 @@ GPIOController *gpioController = new GPIOController(13, OUTPUT);
 
 void wifiConfig()
 {
-    strcpy(wifiSettings.ssid, "Sacdar");
-    strcpy(wifiSettings.password, "11111111");
-    eepromController->writeObject(&wifiSettings, 0, sizeof(struct WiFiSettings));
-    eepromController->readObject(&wifiSettings, 0, sizeof(struct WiFiSettings));
-    for(int i=0; i<strlen(wifiSettings.ssid); i++)
-        Serial.print(wifiSettings.ssid[i]);
+    strcpy(wifiController->wifiSettings.ssid, "aaaa");
+    strcpy(wifiController->wifiSettings.password, "00000000");
+    eepromController->writeObject(&wifiController->wifiSettings, 0, sizeof(struct WiFiSettings));
+    eepromController->readObject(&wifiController->wifiSettings, 0, sizeof(struct WiFiSettings));
+    for (int i = 0; i < strlen(wifiController->wifiSettings.ssid); i++)
+        Serial.print(wifiController->wifiSettings.ssid[i]);
     Serial.println();
-    for(int i=0; i<strlen(wifiSettings.password); i++)
-        Serial.print(wifiSettings.password[i]);
+    for (int i = 0; i < strlen(wifiController->wifiSettings.password); i++)
+        Serial.print(wifiController->wifiSettings.password[i]);
 }
 
 void setup()

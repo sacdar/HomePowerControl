@@ -1,7 +1,7 @@
 #define BUFFER_SIZE 512
 
 #define SSID  "HomePowerControl"      // change this to match your WiFi SSID
-#define PASS  "00000000"    // change this to match your WiFi password 
+#define PASS  "00000000"    // change this to match your WiFi password
 #define PORT  "80"           // using port 8080 by default
 #define TERM_OK "OK\r\n"
 
@@ -18,7 +18,6 @@ SoftwareSerial esp(10, 11); // RX, TX
 
 void ESP8266Controller::setup()
 {
-
     pinMode(LED1, OUTPUT);
     pinMode(STA_CONNECTED_LED, OUTPUT);
 
@@ -28,7 +27,7 @@ void ESP8266Controller::setup()
 
     dbg.begin(9600);
     dbg.println("begin.");
-    while(!dbg){
+    while (!dbg) {
         ; // wait for serial port to connect. Needed for Leonardo only
     }
     setupWiFi();
@@ -42,43 +41,43 @@ void ESP8266Controller::loop()
     int ch_id, packet_len;
     char *pb;
 
-    if (esp.available()){
-        
+    if (esp.available()) {
+
         String rsp = esp.readString();
         dbg.println("<<===esp===");
         dbg.print(rsp);
         dbg.println("======>>");
-        
-        if(rsp.indexOf("+IPD")>=0){
+
+        if (rsp.indexOf("+IPD") >= 0) {
             deal_with_input_http_request(rsp);
         }
     }
-    
-    if(dbg.available()){
+
+    if (dbg.available()) {
         String command = dbg.readString();
         dbg.println(command);
         command = command;
         esp.print(command);
     }
-
 }
 
 
 //Todo: modify to get_ip() to decouple with dbg.print()
-void ESP8266Controller::show_ip(){
+void ESP8266Controller::show_ip()
+{
     // print device IP address
     dbg.print("device ip addr:");
     esp.println("AT+CIFSR");
-    
-    String rsp = wait_for_esp_response(1000,TERM_OK);
+
+    String rsp = wait_for_esp_response(1000, TERM_OK);
 }
 
-String ESP8266Controller::wait_for_esp_response(int timeout, String term = TERM_OK){
-    
-    unsigned long due_time = millis()+timeout;
-    
+String ESP8266Controller::wait_for_esp_response(int timeout, String term = TERM_OK)
+{
+    unsigned long due_time = millis() + timeout;
+
     String rsp = "";
-    while(!rsp.endsWith(term) && millis() < due_time ){
+    while (!rsp.endsWith(term) && millis() < due_time ) {
         rsp = rsp + esp.readString();
     }
     dbg.println(rsp);
@@ -92,36 +91,36 @@ void ESP8266Controller::deal_with_input_http_request(String input)
         turn_on_led1();
     } else if (input.indexOf("/led1/off") > 0) {
         turn_off_led1();
-    } else if (input.indexOf("/atcommand/cmd=")>0){
-        //ex: curl http://192.168.0.18/atcommand/cmd=AT+CIFSR/r/n 
-        String at_command = input.substring(input.indexOf("/atcommand/cmd=")+strlen("/atcommand/cmd="),input.indexOf("/r/n"));
+    } else if (input.indexOf("/atcommand/cmd=") > 0) {
+        //ex: curl http://192.168.0.18/atcommand/cmd=AT+CIFSR/r/n
+        String at_command = input.substring(input.indexOf("/atcommand/cmd=") + strlen("/atcommand/cmd="), input.indexOf("/r/n"));
         dbg.println(at_command);
         esp.println(at_command);
         rsp = wait_for_esp_response(1000);
-    } else if (input.indexOf("/wifi_ssid_id/")){
+    } else if (input.indexOf("/wifi_ssid_id/")) {
         //ex: curl http://192.168.43.83/wifi_ssid_id/ssid=abcd,password=87654321
-        String ssid = input.substring(input.indexOf("/wifi_ssid_id/ssid=")+strlen("/wifi_ssid_id/ssid="),input.indexOf(",password="));
-        String password = input.substring(input.indexOf(",password=")+strlen(",password="), input.indexOf(" HTTP/1.1"));
-        rsp = "ssid:"+ssid+", password="+password;
+        String ssid = input.substring(input.indexOf("/wifi_ssid_id/ssid=") + strlen("/wifi_ssid_id/ssid="), input.indexOf(",password="));
+        String password = input.substring(input.indexOf(",password=") + strlen(",password="), input.indexOf(" HTTP/1.1"));
+        rsp = "ssid:" + ssid + ", password=" + password;
         dbg.println(ssid);
         dbg.println(password);
     }
-    
+
     int channel = get_channel(input);
-    serve_homepage(channel,rsp);
+    serve_homepage(channel, rsp);
 }
 
 
-int ESP8266Controller::get_channel(String input){
-
+int ESP8266Controller::get_channel(String input)
+{
     //It should looks like this:
     //+IPD,1,432:GET /led1/on HTTP/1.1
-    String x = input.substring(input.indexOf("+IPD,")+5,input.indexOf("GET"));
+    String x = input.substring(input.indexOf("+IPD,") + 5, input.indexOf("GET"));
     // now x should be "1,432:"
-    x = x.substring(0,x.indexOf(","));
+    x = x.substring(0, x.indexOf(","));
     // now x should be "1"
-    
-    int channel=x.toInt();
+
+    int channel = x.toInt();
     dbg.print("channel is ");
     dbg.println(channel);
     return channel;
@@ -143,10 +142,10 @@ void ESP8266Controller::serve_homepage(int ch_id, String input_content)
 {
     String header = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\nConnection: close\r\n";
     String content = "";
-    
-    if(input_content.length()>0){
-        content=input_content;
-    }else{
+
+    if (input_content.length() > 0) {
+        content = input_content;
+    } else {
         // output the value of each analog input pin
         for (int analogChannel = 0; analogChannel < 6; analogChannel++) {
             int sensorReading = analogRead(analogChannel);
@@ -181,22 +180,21 @@ void ESP8266Controller::setupWiFi()
     esp.println("AT");
     wait_for_esp_response(1000);
 
-
     // set mode 1 (client)
     esp.println("AT+CWMODE=3");
     String rsp = wait_for_esp_response(1000);
-    
+
     //reset if cw mode is change
-    if(rsp.indexOf("no change")<0){
+    if (rsp.indexOf("no change") < 0) {
         // reset WiFi module
         esp.print("AT+RST\r\n");
         wait_for_esp_response(1500);
         delay(3000);
     }
-    
+
     esp.println("AT+CWSAP=\"AAA\",\"00000000\",5,0");
     wait_for_esp_response(1000);
-    
+
     // join AP
     esp.print("AT+CWJAP=\"");
     esp.print(SSID);
@@ -216,7 +214,5 @@ void ESP8266Controller::setupWiFi()
     esp.print("AT+CIPSERVER=1,"); // turn on TCP service
     esp.println(PORT);
     wait_for_esp_response(1000);
-
-
 }
 

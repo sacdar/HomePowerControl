@@ -2,7 +2,6 @@
 #define _EEPROMCONTROLLER_H_
 
 #include <avr/eeprom.h>
-#include <EEPROM.h>
 
 // AbstractProductC
 class EEPROMController
